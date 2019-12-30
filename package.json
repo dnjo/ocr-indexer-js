@@ -4,6 +4,7 @@
   "description": "",
   "main": "handler.js",
   "dependencies": {
+    "@elastic/elasticsearch": "^6.8.4",
     "aws-sdk": "^2.596.0"
   },
   "devDependencies": {},
