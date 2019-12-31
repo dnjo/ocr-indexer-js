@@ -1,18 +1,29 @@
 'use strict';
+const imageDao = require('./dao/imageDao');
 
-module.exports.hello = async event => {
+const responseHeaders = {
+  'Content-Type': 'application/json',
+  'X-Custom-Header': 'application/json',
+  'Access-Control-Allow-Origin': '*'
+};
+
+function parseUserId(headers) {
+  const authHeader = headers.Authorization;
+  const encodedClaims = authHeader.split('.')[1];
+  const decodedClaims = new Buffer(encodedClaims, 'base64').toString('ascii');
+  return JSON.parse(decodedClaims).sub;
+}
+
+module.exports.findImage = async (event) => {
+  const id = event.pathParameters.id;
+  const userId = parseUserId(event.headers);
+  const image = await imageDao.findImage(id, userId);
   return {
     statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: 'Go Serverless v1.0! Your function executed successfully!',
-        input: event,
-      },
+    body: JSON.stringify(image,
       null,
       2
     ),
+    headers: responseHeaders
   };
-
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
 };

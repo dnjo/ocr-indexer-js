@@ -64,8 +64,20 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: handler.hello
+  findImage:
+    handler: handler.findImage
+    events:
+      - http:
+          path: images/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+          authorizer:
+            name: cognito
+            arn: arn:aws:cognito-idp:eu-west-1:334165208394:userpool/eu-west-1_dFwgp2TaX
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
