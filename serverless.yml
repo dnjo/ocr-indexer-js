@@ -78,6 +78,20 @@ functions:
           authorizer:
             name: cognito
             arn: arn:aws:cognito-idp:eu-west-1:334165208394:userpool/eu-west-1_dFwgp2TaX
+  search:
+    handler: handler.search
+    events:
+      - http:
+          path: search/{indices}/_msearch
+          method: post
+          cors: true
+          request:
+            parameters:
+              paths:
+                indices: true
+          authorizer:
+            name: cognito
+            arn: arn:aws:cognito-idp:eu-west-1:334165208394:userpool/eu-west-1_dFwgp2TaX
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

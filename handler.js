@@ -1,4 +1,5 @@
 'use strict';
+const es = require('./es');
 const imageDao = require('./dao/imageDao');
 
 const responseHeaders = {
@@ -21,6 +22,23 @@ module.exports.findImage = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify(image,
+      null,
+      2
+    ),
+    headers: responseHeaders
+  };
+};
+
+module.exports.search = async (event) => {
+  const userId = parseUserId(event.headers);
+  const client = await es.getClient();
+  const index = es.formatIndexName(userId);
+  const type = es.INDEX_TYPE;
+  const body = event.body;
+  const result = await client.msearch({ index, type, body });
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.body,
       null,
       2
     ),

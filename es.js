@@ -2,6 +2,8 @@ const SSM = require('aws-sdk/clients/ssm');
 const ssm = new SSM();
 const { Client } = require('@elastic/elasticsearch');
 
+const INDEX_NAME = 'documents';
+
 async function initClient() {
   const esUrl = ssm.getParameter({ Name: 'ocrEsUrl' }).promise();
   const esUsername = ssm.getParameter({ Name: 'ocrEsUsername' }).promise();
@@ -18,3 +20,9 @@ if (!client) {
 module.exports.getClient = async () => {
   return await client;
 };
+
+module.exports.formatIndexName = function(userId) {
+  return `${INDEX_NAME}-${userId}`;
+};
+
+module.exports.INDEX_TYPE = 'document';
