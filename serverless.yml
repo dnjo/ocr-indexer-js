@@ -20,6 +20,14 @@ org: denjoh
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
 
+plugins:
+  - serverless-apigw-binary
+
+custom:
+  apigwBinary:
+    types:
+      - 'image/*'
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -29,6 +37,10 @@ provider:
       Action:
         - "ssm:getParameter"
       Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "s3:getObject"
+      Resource: "arn:aws:s3:::ocr-input.dnjo.net/*"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -78,6 +90,17 @@ functions:
           authorizer:
             name: cognito
             arn: arn:aws:cognito-idp:eu-west-1:334165208394:userpool/eu-west-1_dFwgp2TaX
+  findImageBlob:
+    handler: handler.findImageBlob
+    events:
+      - http:
+          path: images/{id}/blob
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
   search:
     handler: handler.search
     events:

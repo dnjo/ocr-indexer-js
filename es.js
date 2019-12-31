@@ -22,7 +22,8 @@ module.exports.getClient = async () => {
 };
 
 module.exports.formatIndexName = function(userId) {
-  return `${INDEX_NAME}-${userId}`;
+  const suffix = userId ? userId : '*';
+  return `${INDEX_NAME}-${suffix}`;
 };
 
 module.exports.INDEX_TYPE = 'document';

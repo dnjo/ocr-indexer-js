@@ -1,12 +1,16 @@
 'use strict';
 const es = require('./es');
 const imageDao = require('./dao/imageDao');
+const S3 = require('aws-sdk/clients/s3');
+const s3 = new S3();
 
-const responseHeaders = {
-  'Content-Type': 'application/json',
-  'X-Custom-Header': 'application/json',
-  'Access-Control-Allow-Origin': '*'
-};
+function defaultHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'X-Custom-Header': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+}
 
 function parseUserId(headers) {
   const authHeader = headers.Authorization;
@@ -25,7 +29,26 @@ module.exports.findImage = async (event) => {
       null,
       2
     ),
-    headers: responseHeaders
+    headers: defaultHeaders()
+  };
+};
+
+module.exports.findImageBlob = async (event) => {
+  const id = event.pathParameters.id;
+  const image = await imageDao.findImageById(id);
+  const params = {
+    Bucket: image.bucket,
+    Key: image.key
+  };
+  const object = await s3.getObject(params).promise();
+  const headers = defaultHeaders();
+  headers['Content-Type'] = object.ContentType;
+  headers['X-Custom-Header'] = object.ContentType;
+  return {
+    statusCode: 200,
+    body: object.Body.toString('base64'),
+    headers: headers,
+    isBase64Encoded: true
   };
 };
 
@@ -42,6 +65,6 @@ module.exports.search = async (event) => {
       null,
       2
     ),
-    headers: responseHeaders
+    headers: defaultHeaders()
   };
 };
