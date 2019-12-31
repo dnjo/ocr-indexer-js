@@ -101,6 +101,20 @@ functions:
             parameters:
               paths:
                 id: true
+  updateImage:
+    handler: handler.updateImage
+    events:
+      - http:
+          path: images/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+          authorizer:
+            name: cognito
+            arn: arn:aws:cognito-idp:eu-west-1:334165208394:userpool/eu-west-1_dFwgp2TaX
   search:
     handler: handler.search
     events:

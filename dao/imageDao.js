@@ -13,14 +13,16 @@ function buildImageDocument(id, document) {
   };
 }
 
-module.exports.findImage = async function (id, userId) {
+async function findImage(id, userId) {
   const client = await es.getClient();
   const index = es.formatIndexName(userId);
   const type = es.INDEX_TYPE;
   console.log(`Getting image from index ${index} with ID ${id}`);
   const documentResult = (await client.get({ id, index, type })).body;
   return buildImageDocument(id, documentResult['_source']);
-};
+}
+
+module.exports.findImage = findImage;
 
 module.exports.findImageById = async function (id) {
   const client = await es.getClient();
@@ -39,4 +41,19 @@ module.exports.findImageById = async function (id) {
   };
   const documentResult = (await client.search({ index, type, body })).body;
   return buildImageDocument(id, documentResult.hits.hits[0]['_source']);
+};
+
+module.exports.updateImage = async function (id, userId, imageData) {
+  const client = await es.getClient();
+  const index = es.formatIndexName(userId);
+  const type = es.INDEX_TYPE;
+  const now = new Date().toISOString();
+  imageData.updatedAt = now;
+  const body = { doc: imageData };
+  await client.update({ id, index, type, body });
+  const image = await findImage(id, userId);
+  image.updatedAt = now;
+  image.text = imageData.text;
+  image.ocrText = imageData.ocrText;
+  return image;
 };

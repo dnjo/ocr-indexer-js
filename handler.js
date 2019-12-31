@@ -52,6 +52,25 @@ module.exports.findImageBlob = async (event) => {
   };
 };
 
+module.exports.updateImage = async (event) => {
+  const id = event.pathParameters.id;
+  const userId = parseUserId(event.headers);
+  const body = JSON.parse(event.body);
+  const imageData = {
+    text: body.text,
+    ocrText: body.ocrText
+  };
+  const image = await imageDao.updateImage(id, userId, imageData);
+  return {
+    statusCode: 200,
+    body: JSON.stringify(image,
+      null,
+      2
+    ),
+    headers: defaultHeaders()
+  };
+};
+
 module.exports.search = async (event) => {
   const userId = parseUserId(event.headers);
   const client = await es.getClient();
