@@ -19,18 +19,18 @@ function parseUserId(headers) {
   return JSON.parse(decodedClaims).sub;
 }
 
+function buildReturnBody(params) {
+  const statusCode = params.statusCode || 200;
+  const headers = params.headers || defaultHeaders();
+  const body = params.jsonResponse === false ? params.body : JSON.stringify(params.body);
+  return { statusCode, body, headers };
+}
+
 module.exports.findImage = async (event) => {
   const id = event.pathParameters.id;
   const userId = parseUserId(event.headers);
-  const image = await imageDao.findImage(id, userId);
-  return {
-    statusCode: 200,
-    body: JSON.stringify(image,
-      null,
-      2
-    ),
-    headers: defaultHeaders()
-  };
+  const body = await imageDao.findImage(id, userId);
+  return buildReturnBody({ body });
 };
 
 module.exports.findImageBlob = async (event) => {
@@ -44,46 +44,39 @@ module.exports.findImageBlob = async (event) => {
   const headers = defaultHeaders();
   headers['Content-Type'] = object.ContentType;
   headers['X-Custom-Header'] = object.ContentType;
-  return {
-    statusCode: 200,
-    body: object.Body.toString('base64'),
-    headers: headers,
-    isBase64Encoded: true
-  };
+  const body = object.Body.toString('base64');
+  const jsonResponse = false;
+  const returnBody =  buildReturnBody({ body, headers, jsonResponse });
+  returnBody.isBase64Encoded = true;
+  return returnBody;
 };
 
 module.exports.updateImage = async (event) => {
   const id = event.pathParameters.id;
   const userId = parseUserId(event.headers);
-  const body = JSON.parse(event.body);
+  const inputBody = JSON.parse(event.body);
   const imageData = {
-    text: body.text,
-    ocrText: body.ocrText
+    text: inputBody.text,
+    ocrText: inputBody.ocrText
   };
-  const image = await imageDao.updateImage(id, userId, imageData);
-  return {
-    statusCode: 200,
-    body: JSON.stringify(image,
-      null,
-      2
-    ),
-    headers: defaultHeaders()
-  };
+  const body = await imageDao.updateImage(id, userId, imageData);
+  return buildReturnBody({ body });
+};
+
+module.exports.deleteImage = async (event) => {
+  const id = event.pathParameters.id;
+  const userId = parseUserId(event.headers);
+  await imageDao.deleteImage(id, userId);
+  const body = { success: true };
+  return buildReturnBody({ body });
 };
 
 module.exports.search = async (event) => {
   const userId = parseUserId(event.headers);
-  const client = await es.getClient();
+  const client = await es.client;
   const index = es.formatIndexName(userId);
   const type = es.INDEX_TYPE;
-  const body = event.body;
-  const result = await client.msearch({ index, type, body });
-  return {
-    statusCode: 200,
-    body: JSON.stringify(result.body,
-      null,
-      2
-    ),
-    headers: defaultHeaders()
-  };
+  const inputBody = event.body;
+  const body = (await client.msearch({ index, type, body: inputBody })).body;
+  return buildReturnBody({ body });
 };

@@ -17,13 +17,10 @@ if (!client) {
   client = initClient();
 }
 
-module.exports.getClient = async () => {
-  return await client;
-};
-
 module.exports.formatIndexName = function(userId) {
   const suffix = userId ? userId : '*';
   return `${INDEX_NAME}-${suffix}`;
 };
 
+module.exports.client = client;
 module.exports.INDEX_TYPE = 'document';

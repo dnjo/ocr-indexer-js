@@ -14,7 +14,7 @@ function buildImageDocument(id, document) {
 }
 
 async function findImage(id, userId) {
-  const client = await es.getClient();
+  const client = await es.client;
   const index = es.formatIndexName(userId);
   const type = es.INDEX_TYPE;
   console.log(`Getting image from index ${index} with ID ${id}`);
@@ -22,10 +22,26 @@ async function findImage(id, userId) {
   return buildImageDocument(id, documentResult['_source']);
 }
 
+async function updateImage (id, userId, imageData) {
+  const client = await es.client;
+  const index = es.formatIndexName(userId);
+  const type = es.INDEX_TYPE;
+  const now = new Date().toISOString();
+  imageData.updatedAt = now;
+  const body = { doc: imageData };
+  await client.update({ id, index, type, body });
+  const image = await findImage(id, userId);
+  image.updatedAt = now;
+  image.text = imageData.text;
+  image.ocrText = imageData.ocrText;
+  return image;
+}
+
 module.exports.findImage = findImage;
+module.exports.updateImage = updateImage;
 
 module.exports.findImageById = async function (id) {
-  const client = await es.getClient();
+  const client = await es.client;
   const index = es.formatIndexName();
   const type = es.INDEX_TYPE;
   const body = {
@@ -43,17 +59,6 @@ module.exports.findImageById = async function (id) {
   return buildImageDocument(id, documentResult.hits.hits[0]['_source']);
 };
 
-module.exports.updateImage = async function (id, userId, imageData) {
-  const client = await es.getClient();
-  const index = es.formatIndexName(userId);
-  const type = es.INDEX_TYPE;
-  const now = new Date().toISOString();
-  imageData.updatedAt = now;
-  const body = { doc: imageData };
-  await client.update({ id, index, type, body });
-  const image = await findImage(id, userId);
-  image.updatedAt = now;
-  image.text = imageData.text;
-  image.ocrText = imageData.ocrText;
-  return image;
+module.exports.deleteImage = async function (id, userId) {
+  return updateImage(id, userId, { present: false });
 };
